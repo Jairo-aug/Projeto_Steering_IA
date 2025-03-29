@@ -1,0 +1,138 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <glm/glm.hpp> // Biblioteca para vetores/matrizes
+
+// --- Classe Face ---
+class Face {
+public:
+    std::vector<int> indicesVertices;  // Índices dos vértices (posições)
+    std::vector<int> indicesTexturas;  // Índices das texturas (UV)
+    std::vector<int> indicesNormais;   // Índices das normais
+
+    // Adiciona um vértice à face (posição, textura, normal)
+    void adicionarVertice(int indiceVertice, int indiceTextura, int indiceNormal) {
+        indicesVertices.push_back(indiceVertice);
+        indicesTexturas.push_back(indiceTextura);
+        indicesNormais.push_back(indiceNormal);
+    }
+
+    // Retorna o número de vértices na face
+    int obterNumeroDeVertices() const {
+        return indicesVertices.size();
+    }
+};
+
+// --- Classe Grupo ---
+class Grupo {
+public:
+    std::vector<Face> faces;  // Lista de faces do grupo
+    std::string material;     // Nome do material (ex: "vermelho", "madeira")
+
+    // Adiciona uma face ao grupo
+    void adicionarFace(const Face& face) {
+        faces.push_back(face);
+    }
+
+    // Retorna o número de faces no grupo
+    int obterNumeroDeFaces() const {
+        return faces.size();
+    }
+};
+
+// --- Classe Malha ---
+class Malha {
+public:
+    std::vector<glm::vec3> vertices;   // Lista de vértices (x, y, z)
+    std::vector<glm::vec2> texturas;   // Coordenadas de textura (u, v)
+    std::vector<glm::vec3> normais;    // Vetores normais (x, y, z)
+    std::vector<Grupo> grupos;         // Grupos de faces
+    std::string nome;                  // Nome da malha (ex: "Cadeira")
+
+    // Adiciona um grupo à malha
+    void adicionarGrupo(const Grupo& grupo) {
+        grupos.push_back(grupo);
+    }
+
+    // Retorna o número total de vértices
+    int obterNumeroDeVertices() const {
+        return vertices.size();
+    }
+
+    // Retorna o número de grupos
+    int obterNumeroDeGrupos() const {
+        return grupos.size();
+    }
+};
+
+// --- Função Principal ---
+int main() {
+    // Criando uma malha (exemplo: quadrado dividido em 2 triângulos)
+    Malha malha;
+    malha.nome = "Quadrado";
+
+    // Adicionando vértices (4 vértices para um quadrado)
+    malha.vertices = {
+        glm::vec3(0.0f, 0.0f, 0.0f), // Vértice 0: canto inferior esquerdo
+        glm::vec3(1.0f, 0.0f, 0.0f), // Vértice 1: canto inferior direito
+        glm::vec3(1.0f, 1.0f, 0.0f), // Vértice 2: canto superior direito
+        glm::vec3(0.0f, 1.0f, 0.0f)  // Vértice 3: canto superior esquerdo
+    };
+
+    // Adicionando texturas (coordenadas UV fictícias)
+    malha.texturas = {
+        glm::vec2(0.0f, 0.0f), // Textura para vértice 0
+        glm::vec2(1.0f, 0.0f), // Textura para vértice 1
+        glm::vec2(1.0f, 1.0f), // Textura para vértice 2
+        glm::vec2(0.0f, 1.0f)  // Textura para vértice 3
+    };
+
+    // Adicionando normais (todas apontando para "frente" no eixo Z)
+    malha.normais = {
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f)
+    };
+
+    // Criando um grupo para a malha
+    Grupo grupo;
+    grupo.material = "Material_Basico";
+
+    // Criando a primeira face (triângulo 1: vértices 0, 1, 2)
+    Face face1;
+    face1.adicionarVertice(0, 0, 0); // Vértice 0, Textura 0, Normal 0
+    face1.adicionarVertice(1, 1, 1); // Vértice 1, Textura 1, Normal 1
+    face1.adicionarVertice(2, 2, 2); // Vértice 2, Textura 2, Normal 2
+
+    // Criando a segunda face (triângulo 2: vértices 0, 2, 3)
+    Face face2;
+    face2.adicionarVertice(0, 0, 0); // Vértice 0, Textura 0, Normal 0
+    face2.adicionarVertice(2, 2, 2); // Vértice 2, Textura 2, Normal 2
+    face2.adicionarVertice(3, 3, 3); // Vértice 3, Textura 3, Normal 3
+
+    // Adicionando faces ao grupo
+    grupo.adicionarFace(face1);
+    grupo.adicionarFace(face2);
+
+    // Adicionando o grupo à malha
+    malha.adicionarGrupo(grupo);
+
+    // --- Imprimindo informações da malha ---
+    std::cout << "=== DADOS DA MALHA ===" << std::endl;
+    std::cout << "Nome: " << malha.nome << std::endl;
+    std::cout << "Total de vértices: " << malha.obterNumeroDeVertices() << std::endl;
+    std::cout << "Total de grupos: " << malha.obterNumeroDeGrupos() << std::endl;
+
+    // Detalhes dos grupos e faces
+    for (const auto& grupo : malha.grupos) {
+        std::cout << "\nGrupo: " << grupo.material << std::endl;
+        std::cout << "Faces: " << grupo.obterNumeroDeFaces() << std::endl;
+
+        for (const auto& face : grupo.faces) {
+            std::cout << "- Face com " << face.obterNumeroDeVertices() << " vértices" << std::endl;
+        }
+    }
+
+    return 0;
+}
