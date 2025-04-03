@@ -2,65 +2,69 @@ using UnityEngine;
 
 public class EvasionAgent : MonoBehaviour
 {
-    public Transform alvo; 
+    public Transform[] alvos; // Array de alvos
     public float velocidade = 3f;
-    public float distanciaEvasao = 3f; 
-    public float forcaEvasao = 2f; 
-    public float tempoMudancaDirecao = 2f; 
-    public float distanciaDeteccao = 1.5f;
-    public LayerMask camadaObstaculos; 
-
     private Vector3 direcaoAtual;
     private float tempoAtual = 0f;
     private Camera cam;
+    private int indiceAlvoAtual = 0; // Índice do alvo atual
+
+    private Collider2D meuCollider; // Referência ao collider do agente
+    private Collider2D colliderAlvo; // Referência ao collider do alvo atual
 
     void Start()
     {
-        direcaoAtual = Random.insideUnitCircle.normalized;
         cam = Camera.main; // Obtém a câmera principal
+        meuCollider = GetComponent<Collider2D>();
+        colliderAlvo = alvos[indiceAlvoAtual].GetComponent<Collider2D>();
     }
 
     void Update()
     {
-        if (alvo != null)
+        if (alvos != null && alvos.Length > 0)
         {
-            float distancia = Vector3.Distance(transform.position, alvo.position);
-            if (distancia < distanciaEvasao)
+            Transform alvoAtual = alvos[indiceAlvoAtual];
+            if (alvoAtual != null)
             {
-                Vector3 direcaoEvasao = (transform.position - alvo.position).normalized * forcaEvasao;
-                direcaoAtual = (direcaoAtual + direcaoEvasao).normalized;
+                // Calcula a direção para o alvo atual
+                Vector3 direcaoParaAlvo = (alvoAtual.position - transform.position).normalized;
+                
+                if (colliderAlvo != null && meuCollider != null && colliderAlvo.bounds.Intersects(meuCollider.bounds))
+                {
+                    // Calcula uma nova direção para evitar a colisão
+                    direcaoAtual = -direcaoAtual;
+                    indiceAlvoAtual = (indiceAlvoAtual + 1) % alvos.Length;
+                    colliderAlvo = alvos[indiceAlvoAtual].GetComponent<Collider2D>();
+                }
+                else
+                {
+                    // Segue em direção ao alvo
+                    direcaoAtual = direcaoParaAlvo;
+                }
             }
         }
 
-        if (Physics2D.Raycast(transform.position, direcaoAtual, distanciaDeteccao, camadaObstaculos))
-        {
-            direcaoAtual = Quaternion.Euler(0, 0, Random.Range(90f, 180f)) * direcaoAtual;
-        }
-
-        tempoAtual += Time.deltaTime;
-        if (tempoAtual >= tempoMudancaDirecao)
-        {
-            direcaoAtual = Random.insideUnitCircle.normalized;
-            tempoAtual = 0f;
-        }
-
+        // Move o agente na direção calculada
         transform.position += direcaoAtual * velocidade * Time.deltaTime;
 
-        ConfinarNaTela(); // Garante que o triângulo não saia da tela
-
+        // Atualiza a rotação do agente para apontar na direção do movimento
         float angulo = Mathf.Atan2(direcaoAtual.y, direcaoAtual.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0, 0, angulo);
     }
 
-    void ConfinarNaTela()
+    void OnDrawGizmos()
     {
-        Vector3 posicaoTela = transform.position;
-        Vector3 limites = cam.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
-
-        posicaoTela.x = Mathf.Clamp(posicaoTela.x, -limites.x, limites.x);
-        posicaoTela.y = Mathf.Clamp(posicaoTela.y, -limites.y, limites.y);
-
-        transform.position = posicaoTela;
+        if (alvos != null)
+        {
+            Gizmos.color = Color.red;
+            foreach (Transform alvo in alvos)
+            {
+            Collider2D colliderAlvo = alvo.GetComponent<Collider2D>();
+            if (colliderAlvo != null)
+            {
+                Gizmos.DrawWireCube(colliderAlvo.bounds.center, colliderAlvo.bounds.size);
+            }
+            }
+        }
     }
 }
-
