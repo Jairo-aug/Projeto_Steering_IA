@@ -28,8 +28,10 @@ public class EvasionAgent : MonoBehaviour
             {
                 // Calcula a direção para o alvo atual
                 Vector3 direcaoParaAlvo = (alvoAtual.position - transform.position).normalized;
-                
-                if (colliderAlvo != null && meuCollider != null && colliderAlvo.bounds.Intersects(meuCollider.bounds))
+                Bounds boundsFuturos = meuCollider.bounds;
+                boundsFuturos.center += direcaoParaAlvo * velocidade * Time.deltaTime;
+
+                if (colliderAlvo != null && meuCollider != null && colliderAlvo.bounds.Intersects(boundsFuturos))
                 {
                     // Calcula uma nova direção para evitar a colisão
                     direcaoAtual = -direcaoAtual;
